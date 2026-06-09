@@ -1,0 +1,65 @@
+{
+  "name": "typanic",
+  "version": "1.0.0",
+  "description": "Forced runtime type assertions for untrusted input — get the type you expect or throw, instead of silently coercing a wrong value to \"\" / 0 / false.",
+  "keywords": [
+    "type",
+    "types",
+    "assert",
+    "assertion",
+    "validate",
+    "validation",
+    "cast",
+    "coerce",
+    "runtime",
+    "typecheck",
+    "guard",
+    "jsdoc",
+    "string",
+    "integer",
+    "number",
+    "boolean",
+    "throw"
+  ],
+  "license": "MIT",
+  "author": "kaspernj <kasper@diestoeckels.de>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaspernj/typanic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kaspernj/typanic/issues"
+  },
+  "homepage": "https://github.com/kaspernj/typanic#readme",
+  "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    }
+  },
+  "files": [
+    "build",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "all-checks": "npm run lint && npm run typecheck && npm test",
+    "build": "tsc --project tsconfig.json",
+    "lint": "eslint .",
+    "prepare": "npm run build",
+    "test": "jasmine",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.3.0",
+    "eslint-plugin-jsdoc": "^62.9.0",
+    "globals": "^17.6.0",
+    "jasmine": "^6.2.0",
+    "typescript": "^5.9.3"
+  }
+}
