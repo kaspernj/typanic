@@ -1,6 +1,6 @@
 {
   "name": "typanic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Forced runtime type assertions for untrusted input — get the type you expect or throw, instead of silently coercing a wrong value to \"\" / 0 / false.",
   "keywords": [
     "type",
