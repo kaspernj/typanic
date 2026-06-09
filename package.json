@@ -50,6 +50,7 @@
     "build": "tsc --project tsconfig.json",
     "lint": "eslint .",
     "prepare": "npm run build",
+    "release:patch": "release-patch",
     "test": "jasmine",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
@@ -60,6 +61,7 @@
     "eslint-plugin-jsdoc": "^62.9.0",
     "globals": "^17.6.0",
     "jasmine": "^6.2.0",
+    "release-patch": "^1.0.0",
     "typescript": "^5.9.3"
   }
 }
