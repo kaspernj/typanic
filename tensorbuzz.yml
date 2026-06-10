@@ -1,3 +1,4 @@
-build_group:
-  branch: master
-  command: npm run all-checks
+before_script:
+  - npm install
+script:
+  - npm run all-checks
