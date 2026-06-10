@@ -1,5 +1,3 @@
-repository: kaspernj/typanic
-project_slug: typanic
 build_group:
   branch: master
   command: npm run all-checks
