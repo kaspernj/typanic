@@ -46,13 +46,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "all-checks": "npm run lint && npm run typecheck && npm test",
+    "all-checks": "npm run lint && npm test",
     "build": "tsc --project tsconfig.json",
-    "lint": "eslint .",
+    "lint": "npm run eslint && npm run typecheck",
     "prepare": "npm run build",
     "release:patch": "release-patch",
     "test": "jasmine",
-    "typecheck": "tsc --project tsconfig.json --noEmit"
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "eslint": "eslint ."
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
