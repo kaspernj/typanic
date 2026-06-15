@@ -3,11 +3,17 @@ import {
   forcedFloat,
   forcedInteger,
   forcedIntegerFromString,
+  forcedNonBlankString,
+  forcedPositiveInteger,
+  forcedPositiveIntegerFromString,
   forcedString,
   optionalBoolean,
   optionalFloat,
   optionalInteger,
   optionalIntegerFromString,
+  optionalNonBlankString,
+  optionalPositiveInteger,
+  optionalPositiveIntegerFromString,
   optionalString
 } from "../src/index.js"
 
@@ -111,6 +117,94 @@ describe("typanic", () => {
       expect(() => optionalIntegerFromString(7)).toThrowError(TypeError)
       expect(() => optionalIntegerFromString("")).toThrowError(TypeError)
       expect(() => optionalIntegerFromString("x")).toThrowError(TypeError)
+    })
+  })
+
+  describe("forcedPositiveInteger", () => {
+    it("returns positive integer numbers and parses integer strings", () => {
+      expect(forcedPositiveInteger(1)).toEqual(1)
+      expect(forcedPositiveInteger("42")).toEqual(42)
+    })
+
+    it("throws for zero, negatives, non-integers, and absent values", () => {
+      expect(() => forcedPositiveInteger(0)).toThrowError(TypeError, "Expected value to be a positive integer but got number")
+      expect(() => forcedPositiveInteger("-1")).toThrowError(TypeError)
+      expect(() => forcedPositiveInteger(1.5)).toThrowError(TypeError)
+      expect(() => forcedPositiveInteger(null)).toThrowError(TypeError)
+    })
+
+    it("uses the label in the error message", () => {
+      expect(() => forcedPositiveInteger("x", "rowNumber")).toThrowError(TypeError, "Expected rowNumber to be a positive integer but got string")
+    })
+  })
+
+  describe("optionalPositiveInteger", () => {
+    it("returns null when absent and parses otherwise", () => {
+      expect(optionalPositiveInteger(undefined)).toBeNull()
+      expect(optionalPositiveInteger(null)).toBeNull()
+      expect(optionalPositiveInteger("7")).toEqual(7)
+    })
+
+    it("throws when present but not a positive integer", () => {
+      expect(() => optionalPositiveInteger(0)).toThrowError(TypeError)
+      expect(() => optionalPositiveInteger("x")).toThrowError(TypeError)
+    })
+  })
+
+  describe("forcedPositiveIntegerFromString", () => {
+    it("parses positive decimal integer strings", () => {
+      expect(forcedPositiveIntegerFromString("1")).toEqual(1)
+      expect(forcedPositiveIntegerFromString(" 42 ")).toEqual(42)
+      expect(forcedPositiveIntegerFromString("9007199254740991")).toEqual(Number.MAX_SAFE_INTEGER)
+    })
+
+    it("throws for non-strings, zero, negatives, decimals, and unsafe integers", () => {
+      expect(() => forcedPositiveIntegerFromString(1)).toThrowError(TypeError, "Expected value to be a positive integer string but got number")
+      expect(() => forcedPositiveIntegerFromString("0")).toThrowError(TypeError)
+      expect(() => forcedPositiveIntegerFromString("-1")).toThrowError(TypeError)
+      expect(() => forcedPositiveIntegerFromString("1.5")).toThrowError(TypeError)
+      expect(() => forcedPositiveIntegerFromString("9007199254740992")).toThrowError(TypeError)
+    })
+  })
+
+  describe("optionalPositiveIntegerFromString", () => {
+    it("returns null when absent and parses otherwise", () => {
+      expect(optionalPositiveIntegerFromString(undefined)).toBeNull()
+      expect(optionalPositiveIntegerFromString(null)).toBeNull()
+      expect(optionalPositiveIntegerFromString("7")).toEqual(7)
+    })
+
+    it("throws when present but not a positive integer string", () => {
+      expect(() => optionalPositiveIntegerFromString(7)).toThrowError(TypeError)
+      expect(() => optionalPositiveIntegerFromString("0")).toThrowError(TypeError)
+      expect(() => optionalPositiveIntegerFromString("x")).toThrowError(TypeError)
+    })
+  })
+
+  describe("forcedNonBlankString", () => {
+    it("returns trimmed non-blank strings", () => {
+      expect(forcedNonBlankString("hello")).toEqual("hello")
+      expect(forcedNonBlankString(" hello ")).toEqual("hello")
+    })
+
+    it("throws for blank strings, non-strings, and absent values", () => {
+      expect(() => forcedNonBlankString("")).toThrowError(TypeError, "Expected value to be a non-blank string but got string")
+      expect(() => forcedNonBlankString("   ")).toThrowError(TypeError)
+      expect(() => forcedNonBlankString(5)).toThrowError(TypeError)
+      expect(() => forcedNonBlankString(null)).toThrowError(TypeError)
+    })
+  })
+
+  describe("optionalNonBlankString", () => {
+    it("returns null when absent and trims otherwise", () => {
+      expect(optionalNonBlankString(undefined)).toBeNull()
+      expect(optionalNonBlankString(null)).toBeNull()
+      expect(optionalNonBlankString(" hi ")).toEqual("hi")
+    })
+
+    it("throws when present but blank or wrong-typed", () => {
+      expect(() => optionalNonBlankString("")).toThrowError(TypeError)
+      expect(() => optionalNonBlankString(5)).toThrowError(TypeError)
     })
   })
 

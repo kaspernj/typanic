@@ -42,6 +42,9 @@ Every helper takes the value and an optional `label` used in the error message
 | `forcedString(value, label?)` | `string` | throws unless `typeof value === "string"` |
 | `forcedInteger(value, label?)` | `number` | accepts integers and integer-looking strings (`"42"`) |
 | `forcedIntegerFromString(value, label?)` | `number` | accepts safe decimal integer strings only; useful for form/query values |
+| `forcedPositiveInteger(value, label?)` | `number` | accepts safe integers greater than zero and integer-looking strings (`"42"`) |
+| `forcedPositiveIntegerFromString(value, label?)` | `number` | accepts safe positive decimal integer strings only |
+| `forcedNonBlankString(value, label?)` | `string` | trims and rejects blank strings |
 | `forcedFloat(value, label?)` | `number` | accepts finite numbers and numeric strings; rejects `NaN`/`Infinity` |
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
 
@@ -52,6 +55,9 @@ Every helper takes the value and an optional `label` used in the error message
 | `optionalString(value, label?)` | `string \| null` |
 | `optionalInteger(value, label?)` | `number \| null` |
 | `optionalIntegerFromString(value, label?)` | `number \| null` |
+| `optionalPositiveInteger(value, label?)` | `number \| null` |
+| `optionalPositiveIntegerFromString(value, label?)` | `number \| null` |
+| `optionalNonBlankString(value, label?)` | `string \| null` |
 | `optionalFloat(value, label?)` | `number \| null` |
 | `optionalBoolean(value, label?)` | `boolean \| null` |
 
@@ -60,11 +66,11 @@ Every helper takes the value and an optional `label` used in the error message
 different things.
 
 ```js
-import {forcedIntegerFromString, optionalString} from "typanic"
+import {forcedPositiveIntegerFromString, optionalString} from "typanic"
 
-const cols = forcedIntegerFromString(payload.cols, "cols")       // decimal string -> number, or throws
-const cursor = optionalString(payload.cursor, "cursor")          // string | null
-const status = optionalString(payload.status, "status") ?? "ok"  // default only when you truly need one
+const cols = forcedPositiveIntegerFromString(payload.cols, "cols") // positive decimal string -> number, or throws
+const cursor = optionalString(payload.cursor, "cursor")            // string | null
+const status = optionalString(payload.status, "status") ?? "ok"    // default only when you truly need one
 ```
 
 ## Why "forced"?

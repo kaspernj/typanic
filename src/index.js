@@ -116,6 +116,107 @@ export function optionalIntegerFromString(value, label = "value") {
 }
 
 /**
+ * Returns the value as a safe positive integer, otherwise throws. Numeric
+ * strings are parsed; zero, negatives, decimals, and unsafe integers throw.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number} the value, typed as a safe positive integer
+ */
+export function forcedPositiveInteger(value, label = "value") {
+  const parsedValue = typeof value === "number" || (typeof value === "string" && value.trim() !== "")
+    ? Number(value)
+    : Number.NaN
+
+  if (!Number.isSafeInteger(parsedValue) || parsedValue < 1) {
+    throw new TypeError(`Expected ${label} to be a positive integer but got ${describeType(value)}`)
+  }
+
+  return parsedValue
+}
+
+/**
+ * Like {@link forcedPositiveInteger}, but allows the value to be absent
+ * (null/undefined become null). A present invalid value still throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number | null} the positive integer value, or null when absent
+ */
+export function optionalPositiveInteger(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedPositiveInteger(value, label)
+}
+
+/**
+ * Returns a safe positive decimal integer parsed from a string, otherwise throws.
+ * Use this for form, route, or query values that must be strings before parsing.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number} the value, parsed as a safe positive decimal integer
+ */
+export function forcedPositiveIntegerFromString(value, label = "value") {
+  if (typeof value === "string") {
+    const trimmedValue = value.trim()
+
+    if (/^\d+$/.test(trimmedValue)) {
+      const parsedValue = Number.parseInt(trimmedValue, 10)
+
+      if (Number.isSafeInteger(parsedValue) && parsedValue > 0) return parsedValue
+    }
+  }
+
+  throw new TypeError(`Expected ${label} to be a positive integer string but got ${describeType(value)}`)
+}
+
+/**
+ * Like {@link forcedPositiveIntegerFromString}, but allows the value to be absent
+ * (null/undefined become null). A present invalid value still throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number | null} the parsed positive integer value, or null when absent
+ */
+export function optionalPositiveIntegerFromString(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedPositiveIntegerFromString(value, label)
+}
+
+/**
+ * Returns a trimmed string when it has non-whitespace content, otherwise throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string} the trimmed non-blank string
+ */
+export function forcedNonBlankString(value, label = "value") {
+  const stringValue = forcedString(value, label).trim()
+
+  if (!stringValue) {
+    throw new TypeError(`Expected ${label} to be a non-blank string but got ${describeType(value)}`)
+  }
+
+  return stringValue
+}
+
+/**
+ * Like {@link forcedNonBlankString}, but allows the value to be absent
+ * (null/undefined become null). Blank strings still throw when present.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string | null} the trimmed non-blank string, or null when absent
+ */
+export function optionalNonBlankString(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedNonBlankString(value, label)
+}
+
+/**
  * Returns the value as a finite number, otherwise throws. Numeric strings are
  * parsed; everything else (including NaN and Infinity) throws.
  *
