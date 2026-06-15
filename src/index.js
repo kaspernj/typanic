@@ -80,6 +80,42 @@ export function optionalInteger(value, label = "value") {
 }
 
 /**
+ * Returns a decimal integer parsed from a string, otherwise throws. Use this
+ * for form, route, or query values that must be strings before parsing.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number} the value, parsed as a decimal integer
+ */
+export function forcedIntegerFromString(value, label = "value") {
+  if (typeof value === "string") {
+    const trimmedValue = value.trim()
+
+    if (/^-?\d+$/.test(trimmedValue)) {
+      const parsedValue = Number.parseInt(trimmedValue, 10)
+
+      if (Number.isSafeInteger(parsedValue)) return parsedValue
+    }
+  }
+
+  throw new TypeError(`Expected ${label} to be an integer string but got ${describeType(value)}`)
+}
+
+/**
+ * Like {@link forcedIntegerFromString}, but allows the value to be absent
+ * (null/undefined become null). A present invalid value still throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number | null} the parsed integer value, or null when absent
+ */
+export function optionalIntegerFromString(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedIntegerFromString(value, label)
+}
+
+/**
  * Returns the value as a finite number, otherwise throws. Numeric strings are
  * parsed; everything else (including NaN and Infinity) throws.
  *
