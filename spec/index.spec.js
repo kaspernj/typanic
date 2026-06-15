@@ -78,6 +78,7 @@ describe("typanic", () => {
       expect(forcedIntegerFromString("42")).toEqual(42)
       expect(forcedIntegerFromString(" 42 ")).toEqual(42)
       expect(forcedIntegerFromString("-7")).toEqual(-7)
+      expect(forcedIntegerFromString("9007199254740991")).toEqual(Number.MAX_SAFE_INTEGER)
     })
 
     it("throws for non-strings and non-integer strings", () => {
@@ -87,6 +88,11 @@ describe("typanic", () => {
       expect(() => forcedIntegerFromString("0x10")).toThrowError(TypeError)
       expect(() => forcedIntegerFromString("")).toThrowError(TypeError)
       expect(() => forcedIntegerFromString(null)).toThrowError(TypeError)
+    })
+
+    it("throws for unsafe or overflowing integer strings", () => {
+      expect(() => forcedIntegerFromString("9007199254740992")).toThrowError(TypeError)
+      expect(() => forcedIntegerFromString("9".repeat(400))).toThrowError(TypeError)
     })
 
     it("uses the label in the error message", () => {

@@ -91,7 +91,11 @@ export function forcedIntegerFromString(value, label = "value") {
   if (typeof value === "string") {
     const trimmedValue = value.trim()
 
-    if (/^-?\d+$/.test(trimmedValue)) return Number.parseInt(trimmedValue, 10)
+    if (/^-?\d+$/.test(trimmedValue)) {
+      const parsedValue = Number.parseInt(trimmedValue, 10)
+
+      if (Number.isSafeInteger(parsedValue)) return parsedValue
+    }
   }
 
   throw new TypeError(`Expected ${label} to be an integer string but got ${describeType(value)}`)

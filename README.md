@@ -41,7 +41,7 @@ Every helper takes the value and an optional `label` used in the error message
 | --- | --- | --- |
 | `forcedString(value, label?)` | `string` | throws unless `typeof value === "string"` |
 | `forcedInteger(value, label?)` | `number` | accepts integers and integer-looking strings (`"42"`) |
-| `forcedIntegerFromString(value, label?)` | `number` | accepts decimal integer strings only; useful for form/query values |
+| `forcedIntegerFromString(value, label?)` | `number` | accepts safe decimal integer strings only; useful for form/query values |
 | `forcedFloat(value, label?)` | `number` | accepts finite numbers and numeric strings; rejects `NaN`/`Infinity` |
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
 
