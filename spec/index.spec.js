@@ -2,10 +2,12 @@ import {
   forcedBoolean,
   forcedFloat,
   forcedInteger,
+  forcedIntegerFromString,
   forcedString,
   optionalBoolean,
   optionalFloat,
   optionalInteger,
+  optionalIntegerFromString,
   optionalString
 } from "../src/index.js"
 
@@ -68,6 +70,41 @@ describe("typanic", () => {
 
     it("throws when present but not an integer", () => {
       expect(() => optionalInteger("x")).toThrowError(TypeError)
+    })
+  })
+
+  describe("forcedIntegerFromString", () => {
+    it("parses decimal integer strings", () => {
+      expect(forcedIntegerFromString("42")).toEqual(42)
+      expect(forcedIntegerFromString(" 42 ")).toEqual(42)
+      expect(forcedIntegerFromString("-7")).toEqual(-7)
+    })
+
+    it("throws for non-strings and non-integer strings", () => {
+      expect(() => forcedIntegerFromString(42)).toThrowError(TypeError, "Expected value to be an integer string but got number")
+      expect(() => forcedIntegerFromString("1.5")).toThrowError(TypeError)
+      expect(() => forcedIntegerFromString("42abc")).toThrowError(TypeError)
+      expect(() => forcedIntegerFromString("0x10")).toThrowError(TypeError)
+      expect(() => forcedIntegerFromString("")).toThrowError(TypeError)
+      expect(() => forcedIntegerFromString(null)).toThrowError(TypeError)
+    })
+
+    it("uses the label in the error message", () => {
+      expect(() => forcedIntegerFromString("x", "categoryNumber")).toThrowError(TypeError, "Expected categoryNumber to be an integer string but got string")
+    })
+  })
+
+  describe("optionalIntegerFromString", () => {
+    it("returns null when absent and parses otherwise", () => {
+      expect(optionalIntegerFromString(undefined)).toBeNull()
+      expect(optionalIntegerFromString(null)).toBeNull()
+      expect(optionalIntegerFromString("7")).toEqual(7)
+    })
+
+    it("throws when present but not an integer string", () => {
+      expect(() => optionalIntegerFromString(7)).toThrowError(TypeError)
+      expect(() => optionalIntegerFromString("")).toThrowError(TypeError)
+      expect(() => optionalIntegerFromString("x")).toThrowError(TypeError)
     })
   })
 

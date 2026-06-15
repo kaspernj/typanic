@@ -41,6 +41,7 @@ Every helper takes the value and an optional `label` used in the error message
 | --- | --- | --- |
 | `forcedString(value, label?)` | `string` | throws unless `typeof value === "string"` |
 | `forcedInteger(value, label?)` | `number` | accepts integers and integer-looking strings (`"42"`) |
+| `forcedIntegerFromString(value, label?)` | `number` | accepts decimal integer strings only; useful for form/query values |
 | `forcedFloat(value, label?)` | `number` | accepts finite numbers and numeric strings; rejects `NaN`/`Infinity` |
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
 
@@ -50,6 +51,7 @@ Every helper takes the value and an optional `label` used in the error message
 | --- | --- |
 | `optionalString(value, label?)` | `string \| null` |
 | `optionalInteger(value, label?)` | `number \| null` |
+| `optionalIntegerFromString(value, label?)` | `number \| null` |
 | `optionalFloat(value, label?)` | `number \| null` |
 | `optionalBoolean(value, label?)` | `boolean \| null` |
 
@@ -58,11 +60,11 @@ Every helper takes the value and an optional `label` used in the error message
 different things.
 
 ```js
-import {forcedInteger, optionalString} from "typanic"
+import {forcedIntegerFromString, optionalString} from "typanic"
 
-const cols = forcedInteger(payload.cols, "cols")                 // number, or throws
-const cursor = optionalString(payload.cursor, "cursor")         // string | null
-const status = optionalString(payload.status, "status") ?? "ok" // default only when you truly need one
+const cols = forcedIntegerFromString(payload.cols, "cols")       // decimal string -> number, or throws
+const cursor = optionalString(payload.cursor, "cursor")          // string | null
+const status = optionalString(payload.status, "status") ?? "ok"  // default only when you truly need one
 ```
 
 ## Why "forced"?
