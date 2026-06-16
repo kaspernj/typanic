@@ -279,3 +279,33 @@ export function optionalBoolean(value, label = "value") {
 
   return forcedBoolean(value, label)
 }
+
+/**
+ * Returns the value when it is a function, otherwise throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {Function} the value, typed as a function
+ */
+export function forcedFunction(value, label = "value") {
+  if (typeof value !== "function") {
+    throw new TypeError(`Expected ${label} to be a function but got ${describeType(value)}`)
+  }
+
+  return value
+}
+
+/**
+ * Like {@link forcedFunction}, but allows the value to be absent
+ * (null/undefined become null). A value that is present but not a function
+ * still throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {Function | null} the function value, or null when absent
+ */
+export function optionalFunction(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedFunction(value, label)
+}
