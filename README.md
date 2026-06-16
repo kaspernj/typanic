@@ -47,6 +47,7 @@ Every helper takes the value and an optional `label` used in the error message
 | `forcedNonBlankString(value, label?)` | `string` | trims and rejects blank strings |
 | `forcedFloat(value, label?)` | `number` | accepts finite numbers and numeric strings; rejects `NaN`/`Infinity` |
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
+| `forcedFunction(value, label?)` | `Function` | throws unless `typeof value === "function"` |
 
 ### Optional — `null` when absent, throw when present-but-wrong-typed
 
@@ -60,6 +61,7 @@ Every helper takes the value and an optional `label` used in the error message
 | `optionalNonBlankString(value, label?)` | `string \| null` |
 | `optionalFloat(value, label?)` | `number \| null` |
 | `optionalBoolean(value, label?)` | `boolean \| null` |
+| `optionalFunction(value, label?)` | `Function \| null` |
 
 `null` and `undefined` both count as "absent" and return `null`. A value that is
 *present* but of the wrong type still throws — absence and corruption are

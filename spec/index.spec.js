@@ -1,6 +1,7 @@
 import {
   forcedBoolean,
   forcedFloat,
+  forcedFunction,
   forcedInteger,
   forcedIntegerFromString,
   forcedNonBlankString,
@@ -9,6 +10,7 @@ import {
   forcedString,
   optionalBoolean,
   optionalFloat,
+  optionalFunction,
   optionalInteger,
   optionalIntegerFromString,
   optionalNonBlankString,
@@ -251,6 +253,38 @@ describe("typanic", () => {
 
     it("throws when present but not a boolean", () => {
       expect(() => optionalBoolean("true")).toThrowError(TypeError)
+    })
+  })
+
+  describe("forcedFunction", () => {
+    it("returns functions", () => {
+      const fn = () => "ok"
+
+      expect(forcedFunction(fn)).toBe(fn)
+    })
+
+    it("throws for non-functions, including absent values", () => {
+      expect(() => forcedFunction("not-callable")).toThrowError(TypeError, "Expected value to be a function but got string")
+      expect(() => forcedFunction(undefined)).toThrowError(TypeError, "Expected value to be a function but got undefined")
+      expect(() => forcedFunction(null)).toThrowError(TypeError, "Expected value to be a function but got null")
+    })
+
+    it("uses the label in the error message", () => {
+      expect(() => forcedFunction(5, "graceTimer.unref")).toThrowError(TypeError, "Expected graceTimer.unref to be a function but got number")
+    })
+  })
+
+  describe("optionalFunction", () => {
+    it("returns null when absent and the function otherwise", () => {
+      const fn = () => "ok"
+
+      expect(optionalFunction(undefined)).toBeNull()
+      expect(optionalFunction(null)).toBeNull()
+      expect(optionalFunction(fn)).toBe(fn)
+    })
+
+    it("throws when present but not a function", () => {
+      expect(() => optionalFunction("not-callable", "maybeCallback")).toThrowError(TypeError, "Expected maybeCallback to be a function but got string")
     })
   })
 })
