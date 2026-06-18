@@ -15,6 +15,48 @@ function describeType(value) {
 }
 
 /**
+ * Describes an unknown value for fallback error messages.
+ *
+ * @param {unknown} value the value to describe
+ * @returns {string} a string representation of the value
+ */
+function describeValue(value) {
+  try {
+    return String(value)
+  } catch {
+    return "<unprintable>"
+  }
+}
+
+/**
+ * Returns the value when it is an Error instance, otherwise throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {Error} the value, typed as an Error
+ */
+export function forcedError(value, label = "value") {
+  if (!(value instanceof Error)) {
+    throw new TypeError(`Expected ${label} to be an Error but got ${describeType(value)}`)
+  }
+
+  return value
+}
+
+/**
+ * Returns Error instances unchanged and wraps any other thrown value in an Error.
+ *
+ * @param {unknown} value the value to convert
+ * @param {string} [label] name used in the fallback error message
+ * @returns {Error} an Error instance
+ */
+export function ensureError(value, label = "value") {
+  if (value instanceof Error) return value
+
+  return new Error(`Expected ${label} to be an Error but got ${describeType(value)}: ${describeValue(value)}`, {cause: value})
+}
+
+/**
  * Returns the value when it is a string, otherwise throws. Use this for required
  * values coming from untrusted input (request bodies, webhook payloads, message
  * payloads, parsed config) instead of silently coercing a wrong type to "".

@@ -48,6 +48,24 @@ Every helper takes the value and an optional `label` used in the error message
 | `forcedFloat(value, label?)` | `number` | accepts finite numbers and numeric strings; rejects `NaN`/`Infinity` |
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
 | `forcedFunction(value, label?)` | `Function` | throws unless `typeof value === "function"` |
+| `forcedError(value, label?)` | `Error` | throws unless `value instanceof Error` |
+
+### Error conversion
+
+Use `ensureError(value, label?)` at catch/throw boundaries where JavaScript can
+throw strings, numbers, or other non-Error values. Error instances are returned
+unchanged. Non-Error values are wrapped in a new `Error` and preserved as
+`error.cause`.
+
+```js
+import {ensureError} from "typanic"
+
+try {
+  await work()
+} catch (error) {
+  throw ensureError(error, "work error")
+}
+```
 
 ### Optional — `null` when absent, throw when present-but-wrong-typed
 

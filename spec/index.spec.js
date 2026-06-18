@@ -1,5 +1,7 @@
 import {
+  ensureError,
   forcedBoolean,
+  forcedError,
   forcedFloat,
   forcedFunction,
   forcedInteger,
@@ -20,6 +22,50 @@ import {
 } from "../src/index.js"
 
 describe("typanic", () => {
+  describe("forcedError", () => {
+    it("returns Error instances", () => {
+      const error = new Error("boom")
+      const typeError = new TypeError("bad type")
+
+      expect(forcedError(error)).toBe(error)
+      expect(forcedError(typeError)).toBe(typeError)
+    })
+
+    it("throws for non-errors, including absent values", () => {
+      expect(() => forcedError("boom")).toThrowError(TypeError, "Expected value to be an Error but got string")
+      expect(() => forcedError(5)).toThrowError(TypeError, "Expected value to be an Error but got number")
+      expect(() => forcedError(undefined)).toThrowError(TypeError, "Expected value to be an Error but got undefined")
+      expect(() => forcedError(null)).toThrowError(TypeError, "Expected value to be an Error but got null")
+    })
+
+    it("uses the label in the error message", () => {
+      expect(() => forcedError("boom", "caughtValue")).toThrowError(TypeError, "Expected caughtValue to be an Error but got string")
+    })
+  })
+
+  describe("ensureError", () => {
+    it("returns Error instances unchanged", () => {
+      const error = new Error("boom")
+
+      expect(ensureError(error)).toBe(error)
+    })
+
+    it("converts non-errors into Error instances with the original value as the cause", () => {
+      const error = ensureError("boom", "caughtValue")
+
+      expect(error).toEqual(jasmine.any(Error))
+      expect(error.message).toEqual("Expected caughtValue to be an Error but got string: boom")
+      expect(error.cause).toEqual("boom")
+    })
+
+    it("converts absent and primitive thrown values without throwing", () => {
+      expect(ensureError(undefined).message).toEqual("Expected value to be an Error but got undefined: undefined")
+      expect(ensureError(null).message).toEqual("Expected value to be an Error but got null: null")
+      expect(ensureError(5).message).toEqual("Expected value to be an Error but got number: 5")
+      expect(ensureError(false).message).toEqual("Expected value to be an Error but got boolean: false")
+    })
+  })
+
   describe("forcedString", () => {
     it("returns the value when it is a string", () => {
       expect(forcedString("hello")).toEqual("hello")
