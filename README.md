@@ -44,6 +44,10 @@ Every helper takes the value and an optional `label` used in the error message
 | `forcedIntegerFromString(value, label?)` | `number` | accepts safe decimal integer strings only; useful for form/query values |
 | `forcedPositiveInteger(value, label?)` | `number` | accepts safe integers greater than zero and integer-looking strings (`"42"`) |
 | `forcedPositiveIntegerFromString(value, label?)` | `number` | accepts safe positive decimal integer strings only |
+| `forcedStringParam(params, key, label?)` | `string` | reads a required single string from a route/query param map |
+| `forcedNonBlankStringParam(params, key, label?)` | `string` | reads a required trimmed non-blank string from a param map |
+| `forcedPositiveIntegerParam(params, key, label?)` | `number` | reads a required safe positive decimal integer from a string param map |
+| `forcedPositiveIntegerList(value, label?)` | `number[]` | parses a scalar or array list of safe positive integers |
 | `forcedNonBlankString(value, label?)` | `string` | trims and rejects blank strings |
 | `forcedFloat(value, label?)` | `number` | accepts finite numbers and numeric strings; rejects `NaN`/`Infinity` |
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
@@ -76,6 +80,10 @@ try {
 | `optionalIntegerFromString(value, label?)` | `number \| null` |
 | `optionalPositiveInteger(value, label?)` | `number \| null` |
 | `optionalPositiveIntegerFromString(value, label?)` | `number \| null` |
+| `optionalStringParam(params, key, label?)` | `string \| null` |
+| `optionalNonBlankStringParam(params, key, label?)` | `string \| null` |
+| `optionalPositiveIntegerParam(params, key, label?)` | `number \| null` |
+| `optionalPositiveIntegerList(value, label?)` | `number[] \| null` |
 | `optionalNonBlankString(value, label?)` | `string \| null` |
 | `optionalFloat(value, label?)` | `number \| null` |
 | `optionalBoolean(value, label?)` | `boolean \| null` |
@@ -91,6 +99,17 @@ import {forcedPositiveIntegerFromString, optionalString} from "typanic"
 const cols = forcedPositiveIntegerFromString(payload.cols, "cols") // positive decimal string -> number, or throws
 const cursor = optionalString(payload.cursor, "cursor")            // string | null
 const status = optionalString(payload.status, "status") ?? "ok"    // default only when you truly need one
+```
+
+Param-map helpers are for route/query frameworks that expose values as
+`Record<string, string | string[] | undefined>`. They reject repeated single-value
+params instead of picking the first value silently.
+
+```js
+import {forcedPositiveIntegerParam, optionalPositiveIntegerList} from "typanic"
+
+const projectId = forcedPositiveIntegerParam(routeParams, "project_id", "Project ID")
+const userIds = optionalPositiveIntegerList(routeParams.user_ids, "User IDs") ?? []
 ```
 
 ## Why "forced"?

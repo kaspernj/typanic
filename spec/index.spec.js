@@ -7,17 +7,25 @@ import {
   forcedInteger,
   forcedIntegerFromString,
   forcedNonBlankString,
+  forcedNonBlankStringParam,
   forcedPositiveInteger,
   forcedPositiveIntegerFromString,
+  forcedPositiveIntegerList,
+  forcedPositiveIntegerParam,
   forcedString,
+  forcedStringParam,
   optionalBoolean,
   optionalFloat,
   optionalFunction,
   optionalInteger,
   optionalIntegerFromString,
   optionalNonBlankString,
+  optionalNonBlankStringParam,
   optionalPositiveInteger,
   optionalPositiveIntegerFromString,
+  optionalPositiveIntegerList,
+  optionalPositiveIntegerParam,
+  optionalStringParam,
   optionalString
 } from "../src/index.js"
 
@@ -331,6 +339,60 @@ describe("typanic", () => {
 
     it("throws when present but not a function", () => {
       expect(() => optionalFunction("not-callable", "maybeCallback")).toThrowError(TypeError, "Expected maybeCallback to be a function but got string")
+    })
+  })
+
+  describe("string param helpers", () => {
+    it("reads single string params from param maps", () => {
+      const params = {filter: "open", tags: ["bug"], title: " Roadmap "}
+
+      expect(forcedStringParam(params, "filter", "Filter")).toEqual("open")
+      expect(optionalStringParam(params, "missing", "Missing")).toBeNull()
+      expect(forcedNonBlankStringParam(params, "title", "Title")).toEqual("Roadmap")
+      expect(optionalNonBlankStringParam(params, "missingTitle", "Missing title")).toBeNull()
+    })
+
+    it("throws for absent, repeated, blank, or wrong-typed params", () => {
+      const params = {blank: " ", count: 7, ids: ["1", "2"]}
+
+      expect(() => forcedStringParam(params, "missing", "Missing")).toThrowError(TypeError, "Expected Missing to be a string but got undefined")
+      expect(() => optionalStringParam(params, "ids", "IDs")).toThrowError(TypeError, "Expected IDs to be a single value but got array")
+      expect(() => forcedNonBlankStringParam(params, "blank", "Title")).toThrowError(TypeError, "Expected Title to be a non-blank string but got string")
+      expect(() => optionalNonBlankStringParam(params, "count", "Count")).toThrowError(TypeError, "Expected Count to be a string but got number")
+    })
+  })
+
+  describe("positive integer param helpers", () => {
+    it("reads positive integer params from decimal string param maps", () => {
+      const params = {page: "2", projectId: " 42 "}
+
+      expect(forcedPositiveIntegerParam(params, "projectId", "Project ID")).toEqual(42)
+      expect(optionalPositiveIntegerParam(params, "page", "Page")).toEqual(2)
+      expect(optionalPositiveIntegerParam(params, "missing", "Missing")).toBeNull()
+    })
+
+    it("throws for repeated or malformed positive integer params", () => {
+      const params = {ids: ["1", "2"], page: "0", projectId: "42abc"}
+
+      expect(() => forcedPositiveIntegerParam(params, "ids", "IDs")).toThrowError(TypeError, "Expected IDs to be a single value but got array")
+      expect(() => optionalPositiveIntegerParam(params, "page", "Page")).toThrowError(TypeError, "Expected Page to be a positive integer string but got string")
+      expect(() => forcedPositiveIntegerParam(params, "projectId", "Project ID")).toThrowError(TypeError, "Expected Project ID to be a positive integer string but got string")
+    })
+  })
+
+  describe("positive integer list helpers", () => {
+    it("parses scalar and array list values", () => {
+      expect(forcedPositiveIntegerList("4", "Project IDs")).toEqual([4])
+      expect(forcedPositiveIntegerList(["2", 3, "5"], "Project IDs")).toEqual([2, 3, 5])
+      expect(optionalPositiveIntegerList(undefined, "Project IDs")).toBeNull()
+      expect(optionalPositiveIntegerList(null, "Project IDs")).toBeNull()
+    })
+
+    it("throws for absent forced lists or malformed entries", () => {
+      expect(() => forcedPositiveIntegerList(undefined, "Project IDs")).toThrowError(TypeError, "Expected Project IDs to be a positive integer list but got undefined")
+      expect(() => optionalPositiveIntegerList(["1", "nope"], "Project IDs")).toThrowError(TypeError, "Expected Project IDs[1] to be a positive integer string but got string")
+      expect(() => forcedPositiveIntegerList(["0"], "Project IDs")).toThrowError(TypeError, "Expected Project IDs[0] to be a positive integer string but got string")
+      expect(() => forcedPositiveIntegerList(["1e3"], "Project IDs")).toThrowError(TypeError, "Expected Project IDs[0] to be a positive integer string but got string")
     })
   })
 })
