@@ -10,9 +10,14 @@
 function describeType(value) {
   if (value === null) return "null"
   if (value === undefined) return "undefined"
+  if (Array.isArray(value)) return "array"
 
   return typeof value
 }
+
+/**
+ * @typedef {Record<string, string | string[] | undefined>} StringParamMap
+ */
 
 /**
  * Describes an unknown value for fallback error messages.
@@ -225,6 +230,143 @@ export function optionalPositiveIntegerFromString(value, label = "value") {
   if (value === null || value === undefined) return null
 
   return forcedPositiveIntegerFromString(value, label)
+}
+
+/**
+ * Returns a required single string from a route/query param map, otherwise throws.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string} the param value
+ */
+export function forcedStringParam(params, key, label = key) {
+  return forcedString(singleParamValue(params, key, label), label)
+}
+
+/**
+ * Like {@link forcedStringParam}, but allows the param to be absent.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string | null} the param value, or null when absent
+ */
+export function optionalStringParam(params, key, label = key) {
+  return optionalString(singleParamValue(params, key, label), label)
+}
+
+/**
+ * Returns a required trimmed non-blank string from a route/query param map.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string} the trimmed param value
+ */
+export function forcedNonBlankStringParam(params, key, label = key) {
+  return forcedNonBlankString(singleParamValue(params, key, label), label)
+}
+
+/**
+ * Like {@link forcedNonBlankStringParam}, but allows the param to be absent.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string | null} the trimmed param value, or null when absent
+ */
+export function optionalNonBlankStringParam(params, key, label = key) {
+  return optionalNonBlankString(singleParamValue(params, key, label), label)
+}
+
+/**
+ * Returns a required positive integer from a decimal string route/query param.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number} the parsed positive integer
+ */
+export function forcedPositiveIntegerParam(params, key, label = key) {
+  return forcedPositiveIntegerFromString(singleParamValue(params, key, label), label)
+}
+
+/**
+ * Like {@link forcedPositiveIntegerParam}, but allows the param to be absent.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number | null} the parsed positive integer, or null when absent
+ */
+export function optionalPositiveIntegerParam(params, key, label = key) {
+  return optionalPositiveIntegerFromString(singleParamValue(params, key, label), label)
+}
+
+/**
+ * Returns positive integer values from a scalar or array list, otherwise throws.
+ *
+ * @param {unknown} value scalar or array list value
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number[]} parsed positive integer values
+ */
+export function forcedPositiveIntegerList(value, label = "value") {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Expected ${label} to be a positive integer list but got ${describeType(value)}`)
+  }
+
+  return positiveIntegerListValues(value, label)
+}
+
+/**
+ * Like {@link forcedPositiveIntegerList}, but allows the list to be absent.
+ *
+ * @param {unknown} value scalar, array, or absent list value
+ * @param {string} [label] name used in the thrown error message
+ * @returns {number[] | null} parsed positive integer values, or null when absent
+ */
+export function optionalPositiveIntegerList(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return positiveIntegerListValues(value, label)
+}
+
+/**
+ * Reads a single param-map value and rejects repeated values.
+ *
+ * @param {StringParamMap} params string-valued param map
+ * @param {string} key key to read from the param map
+ * @param {string} label name used in the thrown error message
+ * @returns {string | undefined} the single param value
+ */
+function singleParamValue(params, key, label) {
+  const value = params[key]
+
+  if (Array.isArray(value)) {
+    throw new TypeError(`Expected ${label} to be a single value but got ${describeType(value)}`)
+  }
+
+  return value
+}
+
+/**
+ * Parses present scalar or array list values as positive integers.
+ *
+ * @param {unknown} value scalar or array list value
+ * @param {string} label name used in the thrown error message
+ * @returns {number[]} parsed positive integer values
+ */
+function positiveIntegerListValues(value, label) {
+  const values = Array.isArray(value) ? value : [value]
+
+  return values.map((item, index) => {
+    const itemLabel = Array.isArray(value) ? `${label}[${index}]` : label
+
+    return typeof item === "string"
+      ? forcedPositiveIntegerFromString(item, itemLabel)
+      : forcedPositiveInteger(item, itemLabel)
+  })
 }
 
 /**
