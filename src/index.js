@@ -307,7 +307,7 @@ export function optionalPositiveIntegerParam(params, key, label = key) {
 /**
  * Returns positive integer values from a scalar or array list, otherwise throws.
  *
- * @param {string | number | (string | number)[]} value scalar or array list value
+ * @param {unknown} value scalar or array list value
  * @param {string} [label] name used in the thrown error message
  * @returns {number[]} parsed positive integer values
  */
@@ -322,7 +322,7 @@ export function forcedPositiveIntegerList(value, label = "value") {
 /**
  * Like {@link forcedPositiveIntegerList}, but allows the list to be absent.
  *
- * @param {string | number | (string | number)[] | null | undefined} value scalar, array, or absent list value
+ * @param {unknown} value scalar, array, or absent list value
  * @param {string} [label] name used in the thrown error message
  * @returns {number[] | null} parsed positive integer values, or null when absent
  */
@@ -353,7 +353,7 @@ function singleParamValue(params, key, label) {
 /**
  * Parses present scalar or array list values as positive integers.
  *
- * @param {string | number | (string | number)[]} value scalar or array list value
+ * @param {unknown} value scalar or array list value
  * @param {string} label name used in the thrown error message
  * @returns {number[]} parsed positive integer values
  */
