@@ -1,5 +1,6 @@
 import {
   ensureError,
+  errorMessage,
   forcedBoolean,
   forcedError,
   forcedFloat,
@@ -71,6 +72,20 @@ describe("typanic", () => {
       expect(ensureError(null).message).toEqual("Expected value to be an Error but got null: null")
       expect(ensureError(5).message).toEqual("Expected value to be an Error but got number: 5")
       expect(ensureError(false).message).toEqual("Expected value to be an Error but got boolean: false")
+    })
+  })
+
+  describe("errorMessage", () => {
+    it("returns string thrown values unchanged", () => {
+      expect(errorMessage("boom")).toEqual("boom")
+    })
+
+    it("returns Error messages", () => {
+      expect(errorMessage(new Error("boom"))).toEqual("boom")
+    })
+
+    it("uses ensureError diagnostics for non-Error thrown values", () => {
+      expect(errorMessage(5, "caughtValue")).toEqual("Expected caughtValue to be an Error but got number: 5")
     })
   })
 
