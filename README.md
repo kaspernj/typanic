@@ -61,13 +61,18 @@ throw strings, numbers, or other non-Error values. Error instances are returned
 unchanged. Non-Error values are wrapped in a new `Error` and preserved as
 `error.cause`.
 
+Use `errorMessage(value, label?)` when a UI or status field needs a displayable
+message for a caught value. String throws are already messages and are returned
+unchanged; everything else is normalized through `ensureError`.
+
 ```js
-import {ensureError} from "typanic"
+import {errorMessage} from "typanic"
 
 try {
   await work()
 } catch (error) {
-  throw ensureError(error, "work error")
+  const message = errorMessage(error, "work error")
+  showError(message)
 }
 ```
 

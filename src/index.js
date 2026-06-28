@@ -62,6 +62,19 @@ export function ensureError(value, label = "value") {
 }
 
 /**
+ * Returns a displayable message for an unknown thrown value.
+ *
+ * @param {unknown} value the thrown value to describe
+ * @param {string} [label] name used in the fallback error message
+ * @returns {string} a message string
+ */
+export function errorMessage(value, label = "value") {
+  if (typeof value === "string") return value
+
+  return ensureError(value, label).message
+}
+
+/**
  * Returns the value when it is a string, otherwise throws. Use this for required
  * values coming from untrusted input (request bodies, webhook payloads, message
  * payloads, parsed config) instead of silently coercing a wrong type to "".
