@@ -40,6 +40,7 @@ Every helper takes the value and an optional `label` used in the error message
 | Function | Returns | Notes |
 | --- | --- | --- |
 | `forcedString(value, label?)` | `string` | throws unless `typeof value === "string"` |
+| `forcedOneOf(value, allowedValues, label?)` | `T` | throws unless `value` is one of `allowedValues` (enum / one-of) |
 | `forcedInteger(value, label?)` | `number` | accepts integers and integer-looking strings (`"42"`) |
 | `forcedIntegerFromString(value, label?)` | `number` | accepts safe decimal integer strings only; useful for form/query values |
 | `forcedPositiveInteger(value, label?)` | `number` | accepts safe integers greater than zero and integer-looking strings (`"42"`) |
@@ -81,6 +82,7 @@ try {
 | Function | Returns |
 | --- | --- |
 | `optionalString(value, label?)` | `string \| null` |
+| `optionalOneOf(value, allowedValues, label?)` | `T \| null` |
 | `optionalInteger(value, label?)` | `number \| null` |
 | `optionalIntegerFromString(value, label?)` | `number \| null` |
 | `optionalPositiveInteger(value, label?)` | `number \| null` |
