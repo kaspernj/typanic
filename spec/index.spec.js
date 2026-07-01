@@ -9,6 +9,7 @@ import {
   forcedIntegerFromString,
   forcedNonBlankString,
   forcedNonBlankStringParam,
+  forcedOneOf,
   forcedPositiveInteger,
   forcedPositiveIntegerFromString,
   forcedPositiveIntegerList,
@@ -22,6 +23,7 @@ import {
   optionalIntegerFromString,
   optionalNonBlankString,
   optionalNonBlankStringParam,
+  optionalOneOf,
   optionalPositiveInteger,
   optionalPositiveIntegerFromString,
   optionalPositiveIntegerList,
@@ -118,6 +120,37 @@ describe("typanic", () => {
 
     it("throws when present but wrong-typed", () => {
       expect(() => optionalString(5)).toThrowError(TypeError)
+    })
+  })
+
+  describe("forcedOneOf", () => {
+    it("returns the value when it is in the allowed set", () => {
+      expect(forcedOneOf("low", ["high", "normal", "low"])).toEqual("low")
+      expect(forcedOneOf(2, [1, 2, 3])).toEqual(2)
+    })
+
+    it("throws for a value outside the allowed set, naming the value and options", () => {
+      expect(() => forcedOneOf("urgent", ["high", "normal", "low"], "priority")).toThrowError(TypeError, "Expected priority to be one of [high, normal, low] but got urgent")
+    })
+
+    it("throws for absent values", () => {
+      expect(() => forcedOneOf(undefined, ["a", "b"])).toThrowError(TypeError)
+      expect(() => forcedOneOf(null, ["a", "b"])).toThrowError(TypeError)
+    })
+  })
+
+  describe("optionalOneOf", () => {
+    it("returns the value when it is in the allowed set", () => {
+      expect(optionalOneOf("high", ["high", "normal", "low"])).toEqual("high")
+    })
+
+    it("returns null when absent", () => {
+      expect(optionalOneOf(null, ["high", "normal", "low"])).toBeNull()
+      expect(optionalOneOf(undefined, ["high", "normal", "low"])).toBeNull()
+    })
+
+    it("throws for a present value outside the allowed set", () => {
+      expect(() => optionalOneOf("urgent", ["high", "normal", "low"], "priority")).toThrowError(TypeError, "Expected priority to be one of [high, normal, low] but got urgent")
     })
   })
 

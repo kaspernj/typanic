@@ -106,6 +106,43 @@ export function optionalString(value, label = "value") {
 }
 
 /**
+ * Returns the value when it is one of the allowed values, otherwise throws. Use
+ * this for required enum-like input (config options, route/query params) instead
+ * of silently accepting an unknown option.
+ *
+ * @template {boolean | number | string} T
+ * @param {unknown} value the value to assert
+ * @param {readonly T[]} allowedValues the values that are permitted
+ * @param {string} [label] name used in the thrown error message
+ * @returns {T} the value, narrowed to one of the allowed values
+ */
+export function forcedOneOf(value, allowedValues, label = "value") {
+  if (allowedValues.includes(/** @type {T} */ (value))) {
+    return /** @type {T} */ (value)
+  }
+
+  const allowedList = allowedValues.map((allowedValue) => describeValue(allowedValue)).join(", ")
+
+  throw new TypeError(`Expected ${label} to be one of [${allowedList}] but got ${describeValue(value)}`)
+}
+
+/**
+ * Like {@link forcedOneOf}, but allows the value to be absent (null/undefined
+ * become null). A present value that is not in the allowed set still throws.
+ *
+ * @template {boolean | number | string} T
+ * @param {unknown} value the value to assert
+ * @param {readonly T[]} allowedValues the values that are permitted
+ * @param {string} [label] name used in the thrown error message
+ * @returns {T | null} the value, or null when absent
+ */
+export function optionalOneOf(value, allowedValues, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedOneOf(value, allowedValues, label)
+}
+
+/**
  * Returns the value as an integer, otherwise throws. Numeric strings (route and
  * query params arrive as strings) are parsed; everything else throws.
  *
