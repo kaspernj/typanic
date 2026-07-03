@@ -20,6 +20,55 @@ function describeType(value) {
  */
 
 /**
+ * @typedef {object} ErrorFactoryDetails
+ * @property {string} code stable machine-readable code, e.g. "typanic/forced_string/wrong_type"
+ * @property {string} label the label used in the error message
+ * @property {unknown} value the value that failed validation
+ */
+
+/**
+ * @typedef {(message: string, details: ErrorFactoryDetails) => Error} ErrorFactory
+ */
+
+/** @type {ErrorFactory | null} */
+let errorFactory = null
+
+/**
+ * Installs a factory that builds the errors thrown by every typanic validator,
+ * so frameworks can raise their own error classes with stable codes. Pass null
+ * to restore the default TypeError behavior.
+ *
+ * @param {ErrorFactory | null} factory the error factory, or null to reset
+ * @returns {void}
+ */
+export function setErrorFactory(factory) {
+  errorFactory = factory === null ? null : /** @type {ErrorFactory} */ (forcedFunction(factory, "errorFactory"))
+}
+
+/**
+ * Builds a validation error through the installed factory (default: TypeError).
+ *
+ * @param {string} message the human-readable error message
+ * @param {ErrorFactoryDetails} details stable code, label, and offending value
+ * @returns {Error} the error to throw
+ */
+function validationError(message, details) {
+  if (errorFactory) return ensureError(errorFactory(message, details), "errorFactory result")
+
+  return new TypeError(message)
+}
+
+/**
+ * Converts a camelCase key to its snake_case equivalent, for param alt-keys.
+ *
+ * @param {string} camelKey the camelCase key
+ * @returns {string} the snake_case key
+ */
+export function snakeCaseKey(camelKey) {
+  return forcedString(camelKey, "camelKey").replace(/([a-z0-9])([A-Z])/gu, "$1_$2").toLowerCase()
+}
+
+/**
  * Describes an unknown value for fallback error messages.
  *
  * @param {unknown} value the value to describe
@@ -42,7 +91,7 @@ function describeValue(value) {
  */
 export function forcedError(value, label = "value") {
   if (!(value instanceof Error)) {
-    throw new TypeError(`Expected ${label} to be an Error but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be an Error but got ${describeType(value)}`, {code: "typanic/forced_error/wrong_type", label, value})
   }
 
   return value
@@ -85,7 +134,7 @@ export function errorMessage(value, label = "value") {
  */
 export function forcedString(value, label = "value") {
   if (typeof value !== "string") {
-    throw new TypeError(`Expected ${label} to be a string but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a string but got ${describeType(value)}`, {code: "typanic/forced_string/wrong_type", label, value})
   }
 
   return value
@@ -123,7 +172,7 @@ export function forcedOneOf(value, allowedValues, label = "value") {
 
   const allowedList = allowedValues.map((allowedValue) => describeValue(allowedValue)).join(", ")
 
-  throw new TypeError(`Expected ${label} to be one of [${allowedList}] but got ${describeValue(value)}`)
+  throw validationError(`Expected ${label} to be one of [${allowedList}] but got ${describeValue(value)}`, {code: "typanic/one_of/not_allowed", label, value})
 }
 
 /**
@@ -159,7 +208,7 @@ export function forcedInteger(value, label = "value") {
     if (Number.isInteger(parsedValue)) return parsedValue
   }
 
-  throw new TypeError(`Expected ${label} to be an integer but got ${describeType(value)}`)
+  throw validationError(`Expected ${label} to be an integer but got ${describeType(value)}`, {code: "typanic/integer/wrong_type", label, value})
 }
 
 /**
@@ -195,7 +244,7 @@ export function forcedIntegerFromString(value, label = "value") {
     }
   }
 
-  throw new TypeError(`Expected ${label} to be an integer string but got ${describeType(value)}`)
+  throw validationError(`Expected ${label} to be an integer string but got ${describeType(value)}`, {code: "typanic/integer_from_string/invalid", label, value})
 }
 
 /**
@@ -226,7 +275,7 @@ export function forcedPositiveInteger(value, label = "value") {
     : Number.NaN
 
   if (!Number.isSafeInteger(parsedValue) || parsedValue < 1) {
-    throw new TypeError(`Expected ${label} to be a positive integer but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a positive integer but got ${describeType(value)}`, {code: "typanic/positive_integer/invalid", label, value})
   }
 
   return parsedValue
@@ -265,7 +314,7 @@ export function forcedPositiveIntegerFromString(value, label = "value") {
     }
   }
 
-  throw new TypeError(`Expected ${label} to be a positive integer string but got ${describeType(value)}`)
+  throw validationError(`Expected ${label} to be a positive integer string but got ${describeType(value)}`, {code: "typanic/positive_integer_from_string/invalid", label, value})
 }
 
 /**
@@ -287,11 +336,13 @@ export function optionalPositiveIntegerFromString(value, label = "value") {
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
- * @param {string} [label] name used in the thrown error message
+ * @param {string | ParamOptions} [labelOrOptions] label string, or {label, altKeys} options
  * @returns {string} the param value
  */
-export function forcedStringParam(params, key, label = key) {
-  return forcedString(singleParamValue(params, key, label), label)
+export function forcedStringParam(params, key, labelOrOptions = key) {
+  const {altKeys, label} = paramOptions(key, labelOrOptions)
+
+  return forcedString(singleParamValue(params, key, label, altKeys), label)
 }
 
 /**
@@ -299,11 +350,13 @@ export function forcedStringParam(params, key, label = key) {
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
- * @param {string} [label] name used in the thrown error message
+ * @param {string | ParamOptions} [labelOrOptions] label string, or {label, altKeys} options
  * @returns {string | null} the param value, or null when absent
  */
-export function optionalStringParam(params, key, label = key) {
-  return optionalString(singleParamValue(params, key, label), label)
+export function optionalStringParam(params, key, labelOrOptions = key) {
+  const {altKeys, label} = paramOptions(key, labelOrOptions)
+
+  return optionalString(singleParamValue(params, key, label, altKeys), label)
 }
 
 /**
@@ -311,11 +364,13 @@ export function optionalStringParam(params, key, label = key) {
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
- * @param {string} [label] name used in the thrown error message
+ * @param {string | ParamOptions} [labelOrOptions] label string, or {label, altKeys} options
  * @returns {string} the trimmed param value
  */
-export function forcedNonBlankStringParam(params, key, label = key) {
-  return forcedNonBlankString(singleParamValue(params, key, label), label)
+export function forcedNonBlankStringParam(params, key, labelOrOptions = key) {
+  const {altKeys, label} = paramOptions(key, labelOrOptions)
+
+  return forcedNonBlankString(singleParamValue(params, key, label, altKeys), label)
 }
 
 /**
@@ -323,11 +378,13 @@ export function forcedNonBlankStringParam(params, key, label = key) {
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
- * @param {string} [label] name used in the thrown error message
+ * @param {string | ParamOptions} [labelOrOptions] label string, or {label, altKeys} options
  * @returns {string | null} the trimmed param value, or null when absent
  */
-export function optionalNonBlankStringParam(params, key, label = key) {
-  return optionalNonBlankString(singleParamValue(params, key, label), label)
+export function optionalNonBlankStringParam(params, key, labelOrOptions = key) {
+  const {altKeys, label} = paramOptions(key, labelOrOptions)
+
+  return optionalNonBlankString(singleParamValue(params, key, label, altKeys), label)
 }
 
 /**
@@ -335,11 +392,13 @@ export function optionalNonBlankStringParam(params, key, label = key) {
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
- * @param {string} [label] name used in the thrown error message
+ * @param {string | ParamOptions} [labelOrOptions] label string, or {label, altKeys} options
  * @returns {number} the parsed positive integer
  */
-export function forcedPositiveIntegerParam(params, key, label = key) {
-  return forcedPositiveIntegerFromString(singleParamValue(params, key, label), label)
+export function forcedPositiveIntegerParam(params, key, labelOrOptions = key) {
+  const {altKeys, label} = paramOptions(key, labelOrOptions)
+
+  return forcedPositiveIntegerFromString(singleParamValue(params, key, label, altKeys), label)
 }
 
 /**
@@ -347,11 +406,13 @@ export function forcedPositiveIntegerParam(params, key, label = key) {
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
- * @param {string} [label] name used in the thrown error message
+ * @param {string | ParamOptions} [labelOrOptions] label string, or {label, altKeys} options
  * @returns {number | null} the parsed positive integer, or null when absent
  */
-export function optionalPositiveIntegerParam(params, key, label = key) {
-  return optionalPositiveIntegerFromString(singleParamValue(params, key, label), label)
+export function optionalPositiveIntegerParam(params, key, labelOrOptions = key) {
+  const {altKeys, label} = paramOptions(key, labelOrOptions)
+
+  return optionalPositiveIntegerFromString(singleParamValue(params, key, label, altKeys), label)
 }
 
 /**
@@ -363,7 +424,7 @@ export function optionalPositiveIntegerParam(params, key, label = key) {
  */
 export function forcedPositiveIntegerList(value, label = "value") {
   if (value === null || value === undefined) {
-    throw new TypeError(`Expected ${label} to be a positive integer list but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a positive integer list but got ${describeType(value)}`, {code: "typanic/positive_integer_list/absent", label, value})
   }
 
   return positiveIntegerListValues(value, label)
@@ -383,18 +444,45 @@ export function optionalPositiveIntegerList(value, label = "value") {
 }
 
 /**
- * Reads a single param-map value and rejects repeated values.
+ * @typedef {object} ParamOptions
+ * @property {string} [label] name used in the thrown error message
+ * @property {string[]} [altKeys] alternative keys read when the primary key is absent
+ */
+
+/**
+ * Normalizes the label-or-options third argument of the param helpers.
+ *
+ * @param {string} key key read from the param map
+ * @param {string | ParamOptions} labelOrOptions label string or options object
+ * @returns {{altKeys: string[], label: string}} normalized options
+ */
+function paramOptions(key, labelOrOptions) {
+  if (typeof labelOrOptions === "string") return {altKeys: [], label: labelOrOptions}
+
+  return {altKeys: labelOrOptions.altKeys ?? [], label: labelOrOptions.label ?? key}
+}
+
+/**
+ * Reads a single param-map value and rejects repeated values. Alt-keys are read
+ * when the primary key is absent (e.g. snake_case aliases of camelCase keys).
  *
  * @param {StringParamMap} params string-valued param map
  * @param {string} key key to read from the param map
  * @param {string} label name used in the thrown error message
+ * @param {string[]} [altKeys] alternative keys read when the primary key is absent
  * @returns {string | undefined} the single param value
  */
-function singleParamValue(params, key, label) {
-  const value = params[key]
+function singleParamValue(params, key, label, altKeys = []) {
+  let value = params[key]
+
+  for (const altKey of altKeys) {
+    if (value !== undefined) break
+
+    value = params[altKey]
+  }
 
   if (Array.isArray(value)) {
-    throw new TypeError(`Expected ${label} to be a single value but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a single value but got ${describeType(value)}`, {code: "typanic/param/repeated_value", label, value})
   }
 
   return value
@@ -430,7 +518,7 @@ export function forcedNonBlankString(value, label = "value") {
   const stringValue = forcedString(value, label).trim()
 
   if (!stringValue) {
-    throw new TypeError(`Expected ${label} to be a non-blank string but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a non-blank string but got ${describeType(value)}`, {code: "typanic/non_blank_string/blank", label, value})
   }
 
   return stringValue
@@ -467,7 +555,7 @@ export function forcedFloat(value, label = "value") {
     if (Number.isFinite(parsedValue)) return parsedValue
   }
 
-  throw new TypeError(`Expected ${label} to be a number but got ${describeType(value)}`)
+  throw validationError(`Expected ${label} to be a number but got ${describeType(value)}`, {code: "typanic/float/invalid", label, value})
 }
 
 /**
@@ -494,7 +582,7 @@ export function optionalFloat(value, label = "value") {
  */
 export function forcedBoolean(value, label = "value") {
   if (typeof value !== "boolean") {
-    throw new TypeError(`Expected ${label} to be a boolean but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a boolean but got ${describeType(value)}`, {code: "typanic/boolean/wrong_type", label, value})
   }
 
   return value
@@ -523,7 +611,7 @@ export function optionalBoolean(value, label = "value") {
  */
 export function forcedFunction(value, label = "value") {
   if (typeof value !== "function") {
-    throw new TypeError(`Expected ${label} to be a function but got ${describeType(value)}`)
+    throw validationError(`Expected ${label} to be a function but got ${describeType(value)}`, {code: "typanic/function/wrong_type", label, value})
   }
 
   return value
@@ -542,4 +630,119 @@ export function optionalFunction(value, label = "value") {
   if (value === null || value === undefined) return null
 
   return forcedFunction(value, label)
+}
+
+/**
+ * Returns a string whose length is within the given bounds, otherwise throws.
+ * The default minLength of 1 rejects empty strings.
+ *
+ * @param {unknown} value the value to assert
+ * @param {{minLength?: number, maxLength: number}} bounds inclusive length bounds
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string} the value, typed as a bounded string
+ */
+export function forcedBoundedString(value, bounds, label = "value") {
+  const maxLength = forcedPositiveInteger(bounds.maxLength, "maxLength")
+  const minLength = bounds.minLength ?? 1
+
+  if (typeof minLength !== "number" || !Number.isSafeInteger(minLength) || minLength < 0) {
+    throw validationError(`Expected minLength to be a non-negative integer but got ${describeType(minLength)}`, {code: "typanic/bounded_string/invalid_min_length", label: "minLength", value: minLength})
+  }
+
+  const stringValue = forcedString(value, label)
+
+  if (stringValue.length < minLength) {
+    const characters = minLength === 1 ? "character" : "characters"
+
+    throw validationError(`Expected ${label} to be at least ${minLength} ${characters} but got ${stringValue.length}`, {code: "typanic/bounded_string/too_short", label, value})
+  }
+
+  if (stringValue.length > maxLength) {
+    const characters = maxLength === 1 ? "character" : "characters"
+
+    throw validationError(`Expected ${label} to be at most ${maxLength} ${characters} but got ${stringValue.length}`, {code: "typanic/bounded_string/too_long", label, value})
+  }
+
+  return stringValue
+}
+
+/**
+ * Like {@link forcedBoundedString}, but allows the value to be absent
+ * (null/undefined become null) and allows empty strings by default.
+ *
+ * @param {unknown} value the value to assert
+ * @param {{minLength?: number, maxLength: number}} bounds inclusive length bounds
+ * @param {string} [label] name used in the thrown error message
+ * @returns {string | null} the bounded string, or null when absent
+ */
+export function optionalBoundedString(value, bounds, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedBoundedString(value, {minLength: bounds.minLength ?? 0, maxLength: bounds.maxLength}, label)
+}
+
+/**
+ * Returns the value as a valid Date, otherwise throws. Date instances pass
+ * through; strings and epoch numbers are parsed; invalid dates throw.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {Date} the value, typed as a valid Date
+ */
+export function forcedDate(value, label = "value") {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      throw validationError(`Expected ${label} to be a valid date but got an invalid Date`, {code: "typanic/date/invalid", label, value})
+    }
+
+    return value
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const dateValue = new Date(value)
+
+    if (!Number.isNaN(dateValue.getTime()) && calendarPartsMatch(value, dateValue)) return dateValue
+  }
+
+  throw validationError(`Expected ${label} to be a valid date but got ${describeType(value)}`, {code: "typanic/date/invalid", label, value})
+}
+
+/**
+ * Guards against Date silently normalizing calendar overflow (e.g. "2026-02-31"
+ * becoming March 3rd). Applies to date-only, zone-less, and Z-suffixed strings,
+ * whose calendar parts must survive parsing; offset forms shift days legitimately
+ * and are left to Date's own validation.
+ *
+ * @param {string | number} value the raw date input
+ * @param {Date} dateValue the parsed date
+ * @returns {boolean} whether the input's calendar parts survived parsing
+ */
+function calendarPartsMatch(value, dateValue) {
+  if (typeof value !== "string") return true
+
+  const calendarMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T[\d:.]+Z?)?$/)
+
+  if (!calendarMatch) return true
+
+  const year = Number(calendarMatch[1])
+  const month = Number(calendarMatch[2])
+  const day = Number(calendarMatch[3])
+  const utcMatches = dateValue.getUTCFullYear() === year && dateValue.getUTCMonth() + 1 === month && dateValue.getUTCDate() === day
+  const localMatches = dateValue.getFullYear() === year && dateValue.getMonth() + 1 === month && dateValue.getDate() === day
+
+  return utcMatches || localMatches
+}
+
+/**
+ * Like {@link forcedDate}, but allows the value to be absent (null/undefined
+ * become null). A present invalid value still throws.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {Date | null} the Date value, or null when absent
+ */
+export function optionalDate(value, label = "value") {
+  if (value === null || value === undefined) return null
+
+  return forcedDate(value, label)
 }
