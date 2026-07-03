@@ -52,6 +52,21 @@ describe("typanic additions", () => {
     })
   })
 
+  describe("forcedBoundedString minLength validation", () => {
+    it("rejects invalid minLength bounds", () => {
+      expect(() => forcedBoundedString("x", {maxLength: 5, minLength: Number.NaN}))
+        .toThrowError(TypeError, "Expected minLength to be a non-negative integer but got number")
+      expect(() => forcedBoundedString("x", {maxLength: 5, minLength: -1}))
+        .toThrowError(TypeError, "Expected minLength to be a non-negative integer but got number")
+      expect(() => forcedBoundedString("x", {maxLength: 5, minLength: "2"}))
+        .toThrowError(TypeError, "Expected minLength to be a non-negative integer but got string")
+    })
+
+    it("accepts an explicit zero minLength", () => {
+      expect(forcedBoundedString("", {maxLength: 5, minLength: 0})).toEqual("")
+    })
+  })
+
   describe("forcedDate", () => {
     it("returns valid Date instances unchanged", () => {
       const date = new Date("2026-07-03T10:00:00.000Z")
@@ -62,6 +77,14 @@ describe("typanic additions", () => {
     it("parses date strings and epoch numbers", () => {
       expect(forcedDate("2026-07-03T10:00:00.000Z").toISOString()).toEqual("2026-07-03T10:00:00.000Z")
       expect(forcedDate(0).toISOString()).toEqual("1970-01-01T00:00:00.000Z")
+    })
+
+    it("rejects calendar-overflow dates that Date would silently normalize", () => {
+      expect(() => forcedDate("2026-02-31", "startsAt")).toThrowError(TypeError, "Expected startsAt to be a valid date but got string")
+      expect(() => forcedDate("2026-02-31T10:00:00Z", "startsAt")).toThrowError(TypeError, "Expected startsAt to be a valid date but got string")
+      expect(() => forcedDate("2026-02-31T10:00:00", "startsAt")).toThrowError(TypeError, "Expected startsAt to be a valid date but got string")
+      expect(forcedDate("2026-02-28").toISOString()).toEqual("2026-02-28T00:00:00.000Z")
+      expect(forcedDate("2026-02-28T23:00:00-05:00").toISOString()).toEqual("2026-03-01T04:00:00.000Z")
     })
 
     it("throws for invalid dates and wrong types", () => {

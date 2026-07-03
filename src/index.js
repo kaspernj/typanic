@@ -644,6 +644,11 @@ export function optionalFunction(value, label = "value") {
 export function forcedBoundedString(value, bounds, label = "value") {
   const maxLength = forcedPositiveInteger(bounds.maxLength, "maxLength")
   const minLength = bounds.minLength ?? 1
+
+  if (typeof minLength !== "number" || !Number.isSafeInteger(minLength) || minLength < 0) {
+    throw validationError(`Expected minLength to be a non-negative integer but got ${describeType(minLength)}`, {code: "typanic/bounded_string/invalid_min_length", label: "minLength", value: minLength})
+  }
+
   const stringValue = forcedString(value, label)
 
   if (stringValue.length < minLength) {
@@ -696,10 +701,36 @@ export function forcedDate(value, label = "value") {
   if (typeof value === "string" || typeof value === "number") {
     const dateValue = new Date(value)
 
-    if (!Number.isNaN(dateValue.getTime())) return dateValue
+    if (!Number.isNaN(dateValue.getTime()) && calendarPartsMatch(value, dateValue)) return dateValue
   }
 
   throw validationError(`Expected ${label} to be a valid date but got ${describeType(value)}`, {code: "typanic/date/invalid", label, value})
+}
+
+/**
+ * Guards against Date silently normalizing calendar overflow (e.g. "2026-02-31"
+ * becoming March 3rd). Applies to date-only, zone-less, and Z-suffixed strings,
+ * whose calendar parts must survive parsing; offset forms shift days legitimately
+ * and are left to Date's own validation.
+ *
+ * @param {string | number} value the raw date input
+ * @param {Date} dateValue the parsed date
+ * @returns {boolean} whether the input's calendar parts survived parsing
+ */
+function calendarPartsMatch(value, dateValue) {
+  if (typeof value !== "string") return true
+
+  const calendarMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T[\d:.]+Z?)?$/)
+
+  if (!calendarMatch) return true
+
+  const year = Number(calendarMatch[1])
+  const month = Number(calendarMatch[2])
+  const day = Number(calendarMatch[3])
+  const utcMatches = dateValue.getUTCFullYear() === year && dateValue.getUTCMonth() + 1 === month && dateValue.getUTCDate() === day
+  const localMatches = dateValue.getFullYear() === year && dateValue.getMonth() + 1 === month && dateValue.getDate() === day
+
+  return utcMatches || localMatches
 }
 
 /**
