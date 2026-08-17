@@ -51,13 +51,22 @@ describe("typanic additions", () => {
     it("throws for non-plain objects and absent values", () => {
       class RecordValue {}
       class NullRootedRecordValue {}
+      class ConstructorSpoofedRecordValue {}
+
+      const constructorSpoofedPrototype = {constructor: Object}
+      const nullRootedConstructorSpoofedPrototype = Object.create(null)
 
       Object.setPrototypeOf(NullRootedRecordValue.prototype, null)
+      ConstructorSpoofedRecordValue.prototype.constructor = Object
+      nullRootedConstructorSpoofedPrototype.constructor = Object
 
       expect(() => forcedPlainObject([])).toThrowError(TypeError, "Expected value to be a plain object but got array")
       expect(() => forcedPlainObject(new Date())).toThrowError(TypeError, "Expected value to be a plain object but got object")
       expect(() => forcedPlainObject(new RecordValue())).toThrowError(TypeError, "Expected value to be a plain object but got object")
       expect(() => forcedPlainObject(new NullRootedRecordValue())).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(new ConstructorSpoofedRecordValue())).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(Object.create(constructorSpoofedPrototype))).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(Object.create(nullRootedConstructorSpoofedPrototype))).toThrowError(TypeError, "Expected value to be a plain object but got object")
       expect(() => forcedPlainObject(null)).toThrowError(TypeError, "Expected value to be a plain object but got null")
       expect(() => forcedPlainObject(undefined)).toThrowError(TypeError, "Expected value to be a plain object but got undefined")
     })

@@ -188,7 +188,7 @@ export function forcedPlainObject(value, label = "value") {
     ? prototype.constructor
     : null
 
-  if (prototype !== null && (typeof prototypeConstructor !== "function" || Function.prototype.toString.call(prototypeConstructor) !== objectConstructorSource)) {
+  if (prototype !== null && (typeof prototypeConstructor !== "function" || prototypeConstructor.prototype !== prototype || Function.prototype.toString.call(prototypeConstructor) !== objectConstructorSource)) {
     throw validationError(`Expected ${label} to be a plain object but got ${describeType(value)}`, {code: "typanic/plain_object/wrong_type", label, value})
   }
 
