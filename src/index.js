@@ -33,6 +33,8 @@ function describeType(value) {
 /** @type {ErrorFactory | null} */
 let errorFactory = null
 
+const objectConstructorSource = Function.prototype.toString.call(Object)
+
 /**
  * Installs a factory that builds the errors thrown by every typanic validator,
  * so frameworks can raise their own error classes with stable codes. Pass null
@@ -152,6 +154,45 @@ export function optionalString(value, label = "value") {
   if (value === null || value === undefined) return null
 
   return forcedString(value, label)
+}
+
+/**
+ * Returns an array value.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {unknown[]} the array value
+ */
+export function forcedArray(value, label = "value") {
+  if (!Array.isArray(value)) {
+    throw validationError(`Expected ${label} to be an array but got ${describeType(value)}`, {code: "typanic/array/wrong_type", label, value})
+  }
+
+  return value
+}
+
+/**
+ * Returns a plain object value.
+ *
+ * @param {unknown} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {Record<string, unknown>} the plain object value
+ */
+export function forcedPlainObject(value, label = "value") {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw validationError(`Expected ${label} to be a plain object but got ${describeType(value)}`, {code: "typanic/plain_object/wrong_type", label, value})
+  }
+
+  const prototype = Object.getPrototypeOf(value)
+  const prototypeConstructor = prototype && Object.prototype.hasOwnProperty.call(prototype, "constructor")
+    ? prototype.constructor
+    : null
+
+  if (prototype !== null && (typeof prototypeConstructor !== "function" || prototypeConstructor.prototype !== prototype || Function.prototype.toString.call(prototypeConstructor) !== objectConstructorSource)) {
+    throw validationError(`Expected ${label} to be a plain object but got ${describeType(value)}`, {code: "typanic/plain_object/wrong_type", label, value})
+  }
+
+  return /** @type {Record<string, unknown>} */ (value)
 }
 
 /**

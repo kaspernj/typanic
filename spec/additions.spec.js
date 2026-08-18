@@ -1,7 +1,11 @@
+import vm from "node:vm"
+
 import {
+  forcedArray,
   forcedBoundedString,
   forcedDate,
   forcedNonBlankStringParam,
+  forcedPlainObject,
   forcedString,
   forcedStringParam,
   optionalBoundedString,
@@ -14,6 +18,58 @@ import {
 describe("typanic additions", () => {
   afterEach(() => {
     setErrorFactory(null)
+  })
+
+  describe("forcedArray", () => {
+    it("returns arrays unchanged", () => {
+      const value = ["one", 2]
+
+      expect(forcedArray(value)).toBe(value)
+    })
+
+    it("throws for non-arrays and absent values", () => {
+      expect(() => forcedArray({0: "one"})).toThrowError(TypeError, "Expected value to be an array but got object")
+      expect(() => forcedArray("one")).toThrowError(TypeError, "Expected value to be an array but got string")
+      expect(() => forcedArray(null)).toThrowError(TypeError, "Expected value to be an array but got null")
+      expect(() => forcedArray(undefined)).toThrowError(TypeError, "Expected value to be an array but got undefined")
+    })
+  })
+
+  describe("forcedPlainObject", () => {
+    it("returns plain objects unchanged", () => {
+      const value = {name: "one"}
+      const nullPrototypeValue = Object.create(null)
+      const crossRealmValue = vm.runInNewContext("({name: 'three'})")
+
+      nullPrototypeValue.name = "two"
+
+      expect(forcedPlainObject(value)).toBe(value)
+      expect(forcedPlainObject(nullPrototypeValue)).toBe(nullPrototypeValue)
+      expect(forcedPlainObject(crossRealmValue)).toBe(crossRealmValue)
+    })
+
+    it("throws for non-plain objects and absent values", () => {
+      class RecordValue {}
+      class NullRootedRecordValue {}
+      class ConstructorSpoofedRecordValue {}
+
+      const constructorSpoofedPrototype = {constructor: Object}
+      const nullRootedConstructorSpoofedPrototype = Object.create(null)
+
+      Object.setPrototypeOf(NullRootedRecordValue.prototype, null)
+      ConstructorSpoofedRecordValue.prototype.constructor = Object
+      nullRootedConstructorSpoofedPrototype.constructor = Object
+
+      expect(() => forcedPlainObject([])).toThrowError(TypeError, "Expected value to be a plain object but got array")
+      expect(() => forcedPlainObject(new Date())).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(new RecordValue())).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(new NullRootedRecordValue())).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(new ConstructorSpoofedRecordValue())).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(Object.create(constructorSpoofedPrototype))).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(Object.create(nullRootedConstructorSpoofedPrototype))).toThrowError(TypeError, "Expected value to be a plain object but got object")
+      expect(() => forcedPlainObject(null)).toThrowError(TypeError, "Expected value to be a plain object but got null")
+      expect(() => forcedPlainObject(undefined)).toThrowError(TypeError, "Expected value to be a plain object but got undefined")
+    })
   })
 
   describe("forcedBoundedString", () => {
@@ -150,11 +206,15 @@ describe("typanic additions", () => {
       expect(() => forcedBoundedString("abcdef", {maxLength: 5})).toThrow()
       expect(() => forcedBoundedString("", {maxLength: 5})).toThrow()
       expect(() => forcedDate("not-a-date")).toThrow()
+      expect(() => forcedArray("not-an-array")).toThrow()
+      expect(() => forcedPlainObject([])).toThrow()
 
       expect(codes).toEqual([
         "typanic/bounded_string/too_long",
         "typanic/bounded_string/too_short",
-        "typanic/date/invalid"
+        "typanic/date/invalid",
+        "typanic/array/wrong_type",
+        "typanic/plain_object/wrong_type"
       ])
     })
 

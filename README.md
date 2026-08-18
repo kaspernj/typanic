@@ -54,6 +54,8 @@ Every helper takes the value and an optional `label` used in the error message
 | `forcedBoolean(value, label?)` | `boolean` | does **not** coerce `"true"`/`1` — pass a real boolean |
 | `forcedFunction(value, label?)` | `Function` | throws unless `typeof value === "function"` |
 | `forcedError(value, label?)` | `Error` | throws unless `value instanceof Error` |
+| `forcedArray(value, label?)` | `unknown[]` | throws unless the value is an array |
+| `forcedPlainObject(value, label?)` | `Record<string, unknown>` | accepts object-literal and null-prototype objects; rejects arrays and class instances |
 
 ### Error conversion
 
