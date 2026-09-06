@@ -85,6 +85,22 @@ function describeValue(value) {
 }
 
 /**
+ * Returns a present value unchanged, otherwise throws for null or undefined.
+ *
+ * @template T
+ * @param {T | null | undefined} value the value to assert
+ * @param {string} [label] name used in the thrown error message
+ * @returns {T} the value, narrowed to exclude null and undefined
+ */
+export function forcedValue(value, label = "value") {
+  if (value === null || value === undefined) {
+    throw validationError(`Expected ${label} to be present but got ${describeType(value)}`, {code: "typanic/forced_value/absent", label, value})
+  }
+
+  return value
+}
+
+/**
  * Returns the value when it is an Error instance, otherwise throws.
  *
  * @param {unknown} value the value to assert

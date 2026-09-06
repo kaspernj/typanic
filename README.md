@@ -35,10 +35,11 @@ ESM only. Ships with TypeScript declarations (`.d.ts`) generated from JSDoc.
 Every helper takes the value and an optional `label` used in the error message
 (`Expected <label> to be a <type> but got <actual>`).
 
-### Required — throw when the value is the wrong type
+### Required — throw when the value contract is not met
 
 | Function | Returns | Notes |
 | --- | --- | --- |
+| `forcedValue(value, label?)` | `T` | narrows `T \| null \| undefined` to `T`; throws only for nullish input |
 | `forcedString(value, label?)` | `string` | throws unless `typeof value === "string"` |
 | `forcedOneOf(value, allowedValues, label?)` | `T` | throws unless `value` is one of `allowedValues` (enum / one-of) |
 | `forcedInteger(value, label?)` | `number` | accepts integers and integer-looking strings (`"42"`) |
@@ -56,6 +57,17 @@ Every helper takes the value and an optional `label` used in the error message
 | `forcedError(value, label?)` | `Error` | throws unless `value instanceof Error` |
 | `forcedArray(value, label?)` | `unknown[]` | throws unless the value is an array |
 | `forcedPlainObject(value, label?)` | `Record<string, unknown>` | accepts object-literal and null-prototype objects; rejects arrays and class instances |
+
+`forcedValue()` is the generic presence assertion for an already-typed value
+that may be nullish, such as a lookup result. It preserves the value and its
+specific type; use a type-specific helper instead when the input itself is
+untrusted.
+
+```js
+import {forcedValue} from "typanic"
+
+const account = forcedValue(await Account.findById(accountId), "account")
+```
 
 ### Error conversion
 
