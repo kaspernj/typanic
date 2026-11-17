@@ -1,4 +1,30 @@
 before_script:
   - npm install
-script:
-  - npm run all-checks
+builds:
+  lint:
+    name: Lint and typecheck
+    paths:
+      - "**"
+      - "!spec/**"
+      - "!**/*.md"
+      - "!tensorbuzz.yml"
+      - "tensorbuzz.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "eslint.config.js"
+    script:
+      - npm run lint
+  test:
+    name: Tests
+    paths:
+      - "**"
+      - "!**/*.md"
+      - "!tensorbuzz.yml"
+      - "tensorbuzz.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "eslint.config.js"
+    script:
+      - npm test
