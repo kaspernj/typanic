@@ -1,8 +1,8 @@
-before_script:
-  - npm install
 builds:
   lint:
     name: Lint and typecheck
+    dependency_roots:
+      - path: .
     paths:
       - "**"
       - "!spec/**"
@@ -17,6 +17,8 @@ builds:
       - npm run lint
   test:
     name: Tests
+    dependency_roots:
+      - path: .
     paths:
       - "**"
       - "!**/*.md"
