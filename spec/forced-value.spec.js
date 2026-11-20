@@ -7,6 +7,7 @@ describe("forcedValue", () => {
     expect(forcedValue(object)).toBe(object)
     expect(forcedValue("")).toEqual("")
     expect(forcedValue(0)).toEqual(0)
+    expect(Number.isNaN(forcedValue(NaN))).toBeTrue()
     expect(forcedValue(false)).toBeFalse()
   })
 
